@@ -114,15 +114,30 @@ SLIME.Input.init = function() {
 
 SLIME.Graphics.init = function() {
     // construct initial scene
-    var canvas = Raphael(0,0,SLIME.World.WORLD_WIDTH, SLIME.World.WORLD_HEIGHT);
     var ball = SLIME.World.snapshot.ball;
     var player = SLIME.World.snapshot.player_slime;
     var computer = SLIME.World.snapshot.computer_slime;
-    SLIME.Graphics.ball = canvas.circle(ball.x, ball.y, ball.radius);
 
-    //TODO: replace player and computer placeholders
-    SLIME.Graphics.player = canvas.circle(player.x, player.y, 10);
-    SLIME.Graphics.computer = canvas.circle(computer.x, computer.y, 10);
+    var camera = SLIME.Graphics.camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 10000);
+    camera.position.z = 1000;
+    var scene = SLIME.Graphics.scene = new THREE.Scene();
+
+    var ball = new THREE.SphereGeometry( 40, 32, 16);
+    var ball_material = new THREE.MeshBasicMaterial({ color: 0x0000ff, wireframe: true });
+    var ball_mesh = SLIME.Graphics.ball_mesh = new THREE.Mesh(ball, ball_material);
+    scene.add(ball_mesh);
+
+    var dome = new THREE.SphereGeometry( 40, 32, 16, 0, 2 * Math.PI, 0, Math.PI / 2 ); 
+    var material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+    var player_mesh = SLIME.Graphics.player_mesh = new THREE.Mesh(dome, material);
+    scene.add(player_mesh);
+    var computer_mesh = SLIME.Graphics.computer_mesh = new THREE.Mesh(dome, material);
+    scene.add(computer_mesh);
+
+    var renderer = SLIME.Graphics.renderer = new THREE.CanvasRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
 };
 SLIME.Graphics.update = function() {
     // move our dynamic objects
@@ -130,7 +145,20 @@ SLIME.Graphics.update = function() {
         player = SLIME.World.snapshot.player_slime,
         computer = SLIME.World.snapshot.computer_slime;
 
-    SLIME.Graphics.ball.attr({cx:ball.x, cy:ball.y}); 
-    SLIME.Graphics.player.attr({cx:player.x, cy:player.y}); 
-    SLIME.Graphics.computer.attr({cx:computer.x, cy:computer.y}); 
+    var renderer = SLIME.Graphics.renderer,
+        scene = SLIME.Graphics.scene,
+        camera = SLIME.Graphics.camera;
+
+    var player_mesh = SLIME.Graphics.player_mesh,
+        computer_mesh = SLIME.Graphics.computer_mesh
+        ball_mesh = SLIME.Graphics.ball_mesh;
+
+    player_mesh.position.x = player.x;
+    player_mesh.position.y = -player.y;
+    computer_mesh.position.x = computer.x;
+    computer_mesh.position.y = -computer.y;
+    ball_mesh.position.x = ball.x;
+    ball_mesh.position.y = -ball.y;
+
+    renderer.render(scene, camera);
 };
